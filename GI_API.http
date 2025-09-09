@@ -1,0 +1,5 @@
+@GI_API_HostAddress = http://localhost:5119
+
+GET {{GI_API_HostAddress}}/api/tasktype
+
+###
