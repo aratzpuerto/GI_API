@@ -9,12 +9,17 @@ namespace GI_API.Services
 {
     public class TaskTypeService
     {
-        public static List<TaskType> GetAll(IConfiguration configuration)
-        {
+#if DEBUG
+        static string _connectionName = "TestConnection";
+#else
+        static string _connectionName = "DefaultConnection";
+#endif
 
+        public static List<TaskType> GetAll(IConfiguration configuration)
+        {         
             List<TaskType> taskTypes = new List<TaskType>();
 
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("DefaultConnection")))
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
             {
                 SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM TaskTypes", con);
                 DataTable dt = new DataTable();
@@ -25,8 +30,10 @@ namespace GI_API.Services
                     for (int i = 0; i < dt.Rows.Count; i++)
                     {
                         TaskType taskType = new TaskType();
-                        taskType.id = Convert.ToInt32(dt.Rows[i]["id"]);
-                        taskType.name = Convert.ToString(dt.Rows[i]["name"]);
+                        DataRow row = dt.Rows[i];
+
+                        taskType.id = Convert.ToInt32(row["id"]);
+                        taskType.name = Convert.ToString(row["name"]);
                         taskTypes.Add(taskType);
                     }
                 }
@@ -42,7 +49,7 @@ namespace GI_API.Services
 
             TaskType taskType = new TaskType();
 
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("DefaultConnection")))
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
             {
                 SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM TaskTypes WHERE id = @taskTypeID", con);
                 da.SelectCommand.Parameters.AddWithValue("@taskTypeID", id);
@@ -51,11 +58,11 @@ namespace GI_API.Services
 
                 if (dt.Rows.Count > 0)
                 {
-                    for (int i = 0; i < dt.Rows.Count; i++)
-                    {
-                        taskType.id = Convert.ToInt32(dt.Rows[i]["id"]);
-                        taskType.name = Convert.ToString(dt.Rows[i]["name"]);
-                    }
+                    DataRow row = dt.Rows[0];
+
+                    taskType.id = Convert.ToInt32(row["id"]);
+                    taskType.name = Convert.ToString(row["name"]);
+
                 }
 
             }
@@ -68,7 +75,7 @@ namespace GI_API.Services
         {
             int newId;
 
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("DefaultConnection")))
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
             {
                 SqlDataAdapter da = new SqlDataAdapter();
                 da.InsertCommand = new SqlCommand("INSERT INTO TaskTypes (name) OUTPUT INSERTED.Id VALUES (@taskTypeName)", con);
@@ -90,7 +97,7 @@ namespace GI_API.Services
 
         public static async Task<(int RowsAffected, string OldValue)> UpdateTaskType(int id, string name, IConfiguration configuration)
         {
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("DefaultConnection")))
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
             {
                 await con.OpenAsync();
 
@@ -117,7 +124,7 @@ namespace GI_API.Services
 
         public static async Task<(int RowsAffected, string DeletedValue)> DeleteTaskType(int id, IConfiguration configuration)
         {
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("DefaultConnection")))
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
             {
                 await con.OpenAsync();
 
