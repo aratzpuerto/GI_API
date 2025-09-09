@@ -13,7 +13,7 @@ namespace GI_API.Services
 #if DEBUG
         static string _connectionName = "TestConnection";
 #else
-        static string _connectionName = "DefaultConnection";
+        static string _connectionName = "GI_Connection";
 #endif
 
         public static List<Models.Task> GetAll(IConfiguration configuration)
