@@ -1,4 +1,5 @@
 using GI_API.Data;
+using GI_API.Middlewares;
 using GI_API.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +14,8 @@ builder.Services.AddSwaggerGen();
 
 //builder.Services.AddDbContext<TaskTypeContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddTransient<GlobalExceptionHandlingMiddleware>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -26,6 +29,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 //app.MapGet("/taskTypes", async(TaskTypeContext db) => await db.TaskTypes.ToListAsync());
 
 //app.MapPost("/taskTypes", async (TaskType taskType, TaskTypeContext db) =>

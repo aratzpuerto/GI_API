@@ -13,27 +13,16 @@ namespace GI_API.Controllers
         [HttpPost("ResetSeed")]
         public async Task<ActionResult> ResetSeed(string tableName, int newSeedId, IConfiguration configuration)
         {
-            try
-            {
 
-                int newId = await DbService.ResetSeed(tableName, newSeedId, _configuration);
-                return Ok(new
-                {
-                    success = true,
-                    message = "Database reseeded successfully",
-                    id = newId,
-                    table = tableName
-                });
-            }
-            catch (Exception ex)
+            int newId = await DbService.ResetSeed(tableName, newSeedId, _configuration);
+            return Ok(new
             {
-                return StatusCode(500, new
-                {
-                    success = false,
-                    message = "An error occurred while reseeding the database",
-                    error = ex.Message
-                });
-            }
+                success = true,
+                message = "Database reseeded successfully",
+                id = newId,
+                table = tableName
+            });
+
         }
 
     }
