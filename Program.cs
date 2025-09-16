@@ -1,6 +1,8 @@
+using GI_API.Contracts;
 using GI_API.Data;
 using GI_API.Middlewares;
 using GI_API.Models;
+using GI_API.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,8 +14,15 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//builder.Services.AddDbContext<TaskTypeContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<TaskTypeContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+
+builder.Services.AddHttpLogging(logging =>
+{
+    logging.LoggingFields = Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.All;
+});
+
+builder.Services.AddSingleton<ILoggerService, LoggerService>();
 builder.Services.AddTransient<GlobalExceptionHandlingMiddleware>();
 
 var app = builder.Build();
@@ -24,6 +33,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseHttpLogging();
 
 app.UseHttpsRedirection();
 
@@ -40,9 +51,6 @@ app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 //    return Results.Ok();
 //}
 //);
-
-
-
 app.MapControllers();
 
 app.Run();

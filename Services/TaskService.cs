@@ -10,18 +10,18 @@ namespace GI_API.Services
     public class TaskService
     {
 
-#if DEBUG
-        static string _connectionName = "TestConnection";
-#else
-        static string _connectionName = "GI_Connection";
-#endif
+//#if DEBUG
+//        static string _connectionName = "TestConnection";
+//#else
+//        static string _connectionName = "GI_Connection";
+//#endif
 
         public static List<Models.Task> GetAll(IConfiguration configuration)
         {
 
             List<Models.Task> taskList = new List<Models.Task>();
            
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("GI_Connection")))
             {
                 SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Tasks", con);
                 DataTable dt = new DataTable();
@@ -70,7 +70,7 @@ namespace GI_API.Services
 
             Models.Task task = new Models.Task();
 
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("GI_Connection")))
             {
                 SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Tasks WHERE id = @taskID", con);
                 da.SelectCommand.Parameters.AddWithValue("@taskID", id);
@@ -135,7 +135,7 @@ namespace GI_API.Services
             if (active != null) insertStr += " ,@active";
             insertStr += ")";
 
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("GI_Connection")))
             {
                 SqlDataAdapter da = new SqlDataAdapter();
                 da.InsertCommand = new SqlCommand(insertStr, con);
@@ -182,7 +182,7 @@ namespace GI_API.Services
             updatetStr += string.Join(", ", setParams);
             updatetStr += " WHERE id = @id";
 
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("GI_Connection")))
             {
                 await con.OpenAsync();
 
@@ -220,7 +220,7 @@ namespace GI_API.Services
                     DELETE FROM Tasks 
                     WHERE Id = @id;";
 
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("GI_Connection")))
             {
                 await con.OpenAsync();
 

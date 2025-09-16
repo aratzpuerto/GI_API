@@ -1,4 +1,5 @@
-﻿using GI_API.Models;
+﻿using GI_API.Contracts;
+using GI_API.Models;
 using GI_API.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -8,20 +9,29 @@ using System.Data;
 
 namespace GI_API.Controllers
 {
+
     [Route("[controller]")]
     [ApiController]
     public class TaskTypeController : ControllerBase
     {
+        private readonly ILoggerService _logger;
         public readonly IConfiguration _configuration;
 
-        public TaskTypeController(IConfiguration configuration) { _configuration = configuration; }
+        public TaskTypeController(IConfiguration configuration, ILoggerService logger) 
+        { 
+            _configuration = configuration; 
+            _logger = logger;
+        }
 
         [HttpGet("GetTaskTypes")]
         public ActionResult<List<TaskType>> GetTaskTypes()
         {
+            _logger.LogInfo("GetTaskTypes:");
             List<TaskType> taskTypes = new List<TaskType>();
             taskTypes = TaskTypeService.GetAll(_configuration);
             //return JsonConvert.SerializeObject(taskTypes).ToString();
+
+            _logger.LogInfo(JsonConvert.SerializeObject(taskTypes).ToString());
 
             return taskTypes;
 

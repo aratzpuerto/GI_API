@@ -4,11 +4,11 @@ namespace GI_API.Services
 {
     public class DbService
     {
-#if DEBUG
-        static string _connectionName = "TestConnection";
-#else
-        static string _connectionName = "GI_Connection";
-#endif
+//#if DEBUG
+//        static string _connectionName = "TestConnection";
+//#else
+//        static string _connectionName = "GI_Connection";
+//#endif
 
         public static async Task<int> ResetSeed(string tableName, int newSeedId, IConfiguration configuration)
         {
@@ -17,7 +17,7 @@ namespace GI_API.Services
                     FROM INFORMATION_SCHEMA.TABLES
                     WHERE TABLE_NAME = @tableName;";
 
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("GI_Connection")))
             using (SqlCommand cmd = new SqlCommand(existsStr, con))
             {
                 cmd.Parameters.AddWithValue("@tableName", tableName);
