@@ -4,11 +4,8 @@ namespace GI_API.Services
 {
     public class DbService
     {
-#if DEBUG
-        static string _connectionName = "TestConnection";
-#else
         static string _connectionName = "GI_Connection";
-#endif
+
 
         public static async Task<int> ResetSeed(string tableName, int newSeedId, IConfiguration configuration)
         {
