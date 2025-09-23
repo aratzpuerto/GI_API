@@ -26,13 +26,8 @@ namespace GI_API.Controllers
         [HttpGet("GetTaskTypes")]
         public ActionResult<List<TaskType>> GetTaskTypes()
         {
-            _logger.LogInfo("GetTaskTypes:");
             List<TaskType> taskTypes = new List<TaskType>();
             taskTypes = TaskTypeService.GetAll(_configuration);
-            //return JsonConvert.SerializeObject(taskTypes).ToString();
-
-            _logger.LogInfo(JsonConvert.SerializeObject(taskTypes).ToString());
-
             return taskTypes;
 
         }
@@ -50,8 +45,6 @@ namespace GI_API.Controllers
             }
 
             TaskType taskType = TaskTypeService.GetById(id, _configuration);
-
-            _logger.LogInfo(JsonConvert.SerializeObject(taskType).ToString());
             return taskType;
         }
 
@@ -64,7 +57,7 @@ namespace GI_API.Controllers
 
             int newId = await TaskTypeService.SetTaskType(name, _configuration);
 
-            var result = Ok(new
+            return Ok(new
             {
                 success = true,
                 message = "Task type created successfully",
@@ -72,44 +65,21 @@ namespace GI_API.Controllers
                 name = name
             });
 
-            _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
-
-            return result;
-
         }
 
         [HttpPut("UpdateTaskType")]
         public async Task<ActionResult> UpdateTaskType(int id, string name)
         {
-            ActionResult result;
             _logger.LogInfo(string.Format("UpdateTaskType/{0}/{1}:", id, name));
             
-            if (id <= 0) {
-                
-                result = BadRequest(new { success = false, message = "Invalid id" });
-                _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
-
-                return BadRequest(result); 
-            }
-            if (string.IsNullOrEmpty(name)) { 
-            
-                result = BadRequest(new { success = false, message = "name cannot be empty" });
-                _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
-
-                return result;
-            
-            }
+            if (id <= 0) return BadRequest(new { success = false, message = "Invalid id" });
+            if (string.IsNullOrEmpty(name)) return BadRequest(new { success = false, message = "name cannot be empty" });
 
             var (rows, oldValue) = await TaskTypeService.UpdateTaskType(id, name, _configuration);
 
-            if (rows == 0) { 
-                result = NotFound(new { success = false, message = string.Format("Task type with id {0} not found.", id) });
-                _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
+            if (rows == 0) return NotFound(new { success = false, message = string.Format("Task type with id {0} not found.", id) });
 
-                return result;
-            }
-
-            result = Ok(new
+            return Ok(new
             {
                 success = true,
                 message = string.Format("Task type updated successfully from {0} to {1}", oldValue, name),
@@ -117,33 +87,20 @@ namespace GI_API.Controllers
                 name = name
             });
             
-            _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
-
-            return result;
-
         }
 
         [HttpDelete("DeleteTaskType")]
         public async Task<ActionResult> DeleteTaskType(int id)
         {
-            ActionResult result;
             _logger.LogInfo(string.Format("DeleteTaskType/{0}:", id));
 
-            if (id <= 0) { 
-                result = BadRequest(new { success = false, message = "Invalid id" });
-                _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
-                return result;
-            }
+            if (id <= 0) return BadRequest(new { success = false, message = "Invalid id" });
 
             var (rows, deletedValue) = await TaskTypeService.DeleteTaskType(id, _configuration);
 
-            if (rows == 0) { 
-                result = NotFound(new { success = false, message = $"Task type with id {id} not found" });
-                _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
-                return result;
-            }
+            if (rows == 0) return NotFound(new { success = false, message = $"Task type with id {id} not found" });
 
-            result = Ok(new
+            return Ok(new
             {
                 success = true,
                 message = $"Task type '{deletedValue}' with id {id} deleted successfully",
@@ -151,8 +108,6 @@ namespace GI_API.Controllers
                 deletedValue
             });
 
-            _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
-            return result;
         }
 
     }

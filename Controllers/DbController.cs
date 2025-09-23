@@ -26,17 +26,14 @@ namespace GI_API.Controllers
 
             int newId = await DbService.ResetSeed(tableName, newSeedId, _configuration);
 
-            result = Ok(new
+            return Ok(new
             {
                 success = true,
                 message = "Database reseeded successfully",
                 id = newId,
                 table = tableName
             });
-            _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
-
-            return result;
-
+            
         }
 
     }
