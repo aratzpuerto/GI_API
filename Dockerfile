@@ -28,7 +28,9 @@ FROM base AS final
 WORKDIR /app
 
 # Create logs folder
-RUN mkdir -p /app/logs
+USER root
+RUN mkdir -p /app/logs && chmod -R 777 /app/logs
+USER $APP_UID
 
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "GI_API.dll"]
