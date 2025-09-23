@@ -7,8 +7,8 @@ namespace GI_API.Middlewares
     public class GlobalExceptionHandlingMiddleware : IMiddleware
     {
 
-        private readonly ILogger _logger;
-        public GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlingMiddleware> logger) => _logger = logger;
+        private readonly ILogger<GlobalExceptionHandlingMiddleware> _logger;
+        public GlobalExceptionHandlingMiddleware(ILogger<GlobalExceptionHandlingMiddleware> logger) => _logger = logger;
 
         
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
