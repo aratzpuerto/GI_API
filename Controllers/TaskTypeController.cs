@@ -40,22 +40,31 @@ namespace GI_API.Controllers
         [HttpGet("GetTaskTypeById")]
         public ActionResult<TaskType> GetTaskTypeById(int id)
         {
-            if (id == 0) return BadRequest(new { success = false, message = "id cannot be 0" });
+            ActionResult result;
+            _logger.LogInfo(string.Format("GetTaskTypeById/{0}:", id));
+
+            if (id == 0) { 
+                result = BadRequest(new { success = false, message = "id cannot be 0" });
+                _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
+                return result;
+            }
 
             TaskType taskType = TaskTypeService.GetById(id, _configuration);
-            if (taskType == null)
-                return NotFound();
+
+            _logger.LogInfo(JsonConvert.SerializeObject(taskType).ToString());
             return taskType;
         }
 
         [HttpPost("SetTaskType")]
         public async Task<ActionResult> SetTaskType(string name)
         {
+            _logger.LogInfo(string.Format("SetTaskType/{0}:", name));
+
             if (string.IsNullOrEmpty(name)) return BadRequest(new { success = false, message = "name cannot be empty" });
 
             int newId = await TaskTypeService.SetTaskType(name, _configuration);
 
-            return Ok(new
+            var result = Ok(new
             {
                 success = true,
                 message = "Task type created successfully",
@@ -63,44 +72,87 @@ namespace GI_API.Controllers
                 name = name
             });
 
+            _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
+
+            return result;
+
         }
 
         [HttpPut("UpdateTaskType")]
         public async Task<ActionResult> UpdateTaskType(int id, string name)
         {
-            if (id <= 0) return BadRequest(new { success = false, message = "Invalid id" });
-            if (string.IsNullOrEmpty(name)) return BadRequest(new { success = false, message = "name cannot be empty" });
+            ActionResult result;
+            _logger.LogInfo(string.Format("UpdateTaskType/{0}/{1}:", id, name));
+            
+            if (id <= 0) {
+                
+                result = BadRequest(new { success = false, message = "Invalid id" });
+                _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
+
+                return BadRequest(result); 
+            }
+            if (string.IsNullOrEmpty(name)) { 
+            
+                result = BadRequest(new { success = false, message = "name cannot be empty" });
+                _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
+
+                return result;
+            
+            }
 
             var (rows, oldValue) = await TaskTypeService.UpdateTaskType(id, name, _configuration);
 
-            if (rows == 0) return NotFound(new { success = false, message = string.Format("Task type with id {0} not found.", id) });
+            if (rows == 0) { 
+                result = NotFound(new { success = false, message = string.Format("Task type with id {0} not found.", id) });
+                _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
 
-            return Ok(new
+                return result;
+            }
+
+            result = Ok(new
             {
                 success = true,
                 message = string.Format("Task type updated successfully from {0} to {1}", oldValue, name),
                 id = id,
                 name = name
             });
+            
+            _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
+
+            return result;
 
         }
 
         [HttpDelete("DeleteTaskType")]
         public async Task<ActionResult> DeleteTaskType(int id)
         {
-            if (id <= 0) return BadRequest(new { success = false, message = "Invalid id" });
+            ActionResult result;
+            _logger.LogInfo(string.Format("DeleteTaskType/{0}:", id));
+
+            if (id <= 0) { 
+                result = BadRequest(new { success = false, message = "Invalid id" });
+                _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
+                return result;
+            }
 
             var (rows, deletedValue) = await TaskTypeService.DeleteTaskType(id, _configuration);
 
-            if (rows == 0) return NotFound(new { success = false, message = $"Task type with id {id} not found" });
+            if (rows == 0) { 
+                result = NotFound(new { success = false, message = $"Task type with id {id} not found" });
+                _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
+                return result;
+            }
 
-            return Ok(new
+            result = Ok(new
             {
                 success = true,
                 message = $"Task type '{deletedValue}' with id {id} deleted successfully",
                 id = id,
                 deletedValue
             });
+
+            _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
+            return result;
         }
 
     }
