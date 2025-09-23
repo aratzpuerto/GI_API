@@ -21,36 +21,22 @@ namespace GI_API.Controllers
         public async Task<ActionResult> ResetSeed(string tableName, int newSeedId, IConfiguration configuration)
         {
             ActionResult result;
-            try
+
+            _logger.LogInfo(string.Format("ResetSeed/{0}/{1}:",tableName, newSeedId));
+
+            int newId = await DbService.ResetSeed(tableName, newSeedId, _configuration);
+
+            result = Ok(new
             {
-                _logger.LogInfo(string.Format("ResetSeed/{0}/{1}:",tableName, newSeedId));
+                success = true,
+                message = "Database reseeded successfully",
+                id = newId,
+                table = tableName
+            });
+            _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
 
-                int newId = await DbService.ResetSeed(tableName, newSeedId, _configuration);
+            return result;
 
-                result = Ok(new
-                {
-                    success = true,
-                    message = "Database reseeded successfully",
-                    id = newId,
-                    table = tableName
-                });
-                _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                result = StatusCode(500, new
-                {
-                    success = false,
-                    message = "An error occurred while reseeding the database",
-                    error = ex.Message
-                });
-                _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
-                _logger.LogInfo(ex.Message);
-
-                return result;
-            }
         }
 
     }
