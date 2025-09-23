@@ -9,17 +9,14 @@ namespace GI_API.Services
 {
     public class TaskTypeService
     {
-//#if DEBUG
-//        static string _connectionName = "TestConnection";
-//#else
-//        static string _connectionName = "GI_Connection";
-//#endif
+        static string _connectionName = "GI_Connection";
+
 
         public static List<TaskType> GetAll(IConfiguration configuration)
-        {
+        {         
             List<TaskType> taskTypes = new List<TaskType>();
 
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("GI_Connection")))
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
             {
                 SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM TaskTypes", con);
                 DataTable dt = new DataTable();
@@ -49,7 +46,7 @@ namespace GI_API.Services
 
             TaskType taskType = new TaskType();
 
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("GI_Connection")))
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
             {
                 SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM TaskTypes WHERE id = @taskTypeID", con);
                 da.SelectCommand.Parameters.AddWithValue("@taskTypeID", id);
@@ -75,7 +72,7 @@ namespace GI_API.Services
         {
             int newId;
 
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("GI_Connection")))
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
             {
                 SqlDataAdapter da = new SqlDataAdapter();
                 da.InsertCommand = new SqlCommand("INSERT INTO TaskTypes (name) OUTPUT INSERTED.Id VALUES (@taskTypeName)", con);
@@ -97,7 +94,7 @@ namespace GI_API.Services
 
         public static async Task<(int RowsAffected, string OldValue)> UpdateTaskType(int id, string name, IConfiguration configuration)
         {
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("GI_Connection")))
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
             {
                 await con.OpenAsync();
 
@@ -124,7 +121,7 @@ namespace GI_API.Services
 
         public static async Task<(int RowsAffected, string DeletedValue)> DeleteTaskType(int id, IConfiguration configuration)
         {
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString("GI_Connection")))
+            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
             {
                 await con.OpenAsync();
 
