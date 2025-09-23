@@ -9,11 +9,8 @@ namespace GI_API.Services
 {
     public class TaskTypeService
     {
-#if DEBUG
-        static string _connectionName = "TestConnection";
-#else
         static string _connectionName = "GI_Connection";
-#endif
+
 
         public static List<TaskType> GetAll(IConfiguration configuration)
         {         

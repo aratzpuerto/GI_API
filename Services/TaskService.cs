@@ -9,12 +9,8 @@ namespace GI_API.Services
 {
     public class TaskService
     {
-
-#if DEBUG
-        static string _connectionName = "TestConnection";
-#else
         static string _connectionName = "GI_Connection";
-#endif
+
 
         public static List<Models.Task> GetAll(IConfiguration configuration)
         {
