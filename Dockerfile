@@ -26,5 +26,11 @@ RUN dotnet publish "GI_API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:Us
 # Esta fase se usa en producción o cuando se ejecuta desde VS en modo normal (valor predeterminado cuando no se usa la configuración de depuración)
 FROM base AS final
 WORKDIR /app
+
+# Create logs folder
+USER root
+RUN mkdir -p /app/logs && chmod -R 777 /app/logs
+USER $APP_UID
+
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "GI_API.dll"]

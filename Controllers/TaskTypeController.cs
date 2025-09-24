@@ -1,4 +1,5 @@
-﻿using GI_API.Models;
+﻿using GI_API.Contracts;
+using GI_API.Models;
 using GI_API.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -8,21 +9,25 @@ using System.Data;
 
 namespace GI_API.Controllers
 {
+
     [Route("[controller]")]
     [ApiController]
     public class TaskTypeController : ControllerBase
     {
+        private readonly ILoggerService _logger;
         public readonly IConfiguration _configuration;
 
-        public TaskTypeController(IConfiguration configuration) { _configuration = configuration; }
+        public TaskTypeController(IConfiguration configuration, ILoggerService logger) 
+        { 
+            _configuration = configuration; 
+            _logger = logger;
+        }
 
         [HttpGet("GetTaskTypes")]
         public ActionResult<List<TaskType>> GetTaskTypes()
         {
             List<TaskType> taskTypes = new List<TaskType>();
             taskTypes = TaskTypeService.GetAll(_configuration);
-            //return JsonConvert.SerializeObject(taskTypes).ToString();
-
             return taskTypes;
 
         }
@@ -30,17 +35,24 @@ namespace GI_API.Controllers
         [HttpGet("GetTaskTypeById")]
         public ActionResult<TaskType> GetTaskTypeById(int id)
         {
-            if (id == 0) return BadRequest(new { success = false, message = "id cannot be 0" });
+            ActionResult result;
+            _logger.LogInfo(string.Format("GetTaskTypeById/{0}:", id));
+
+            if (id == 0) { 
+                result = BadRequest(new { success = false, message = "id cannot be 0" });
+                _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
+                return result;
+            }
 
             TaskType taskType = TaskTypeService.GetById(id, _configuration);
-            if (taskType == null)
-                return NotFound();
             return taskType;
         }
 
         [HttpPost("SetTaskType")]
         public async Task<ActionResult> SetTaskType(string name)
         {
+            _logger.LogInfo(string.Format("SetTaskType/{0}:", name));
+
             if (string.IsNullOrEmpty(name)) return BadRequest(new { success = false, message = "name cannot be empty" });
 
             int newId = await TaskTypeService.SetTaskType(name, _configuration);
@@ -58,6 +70,8 @@ namespace GI_API.Controllers
         [HttpPut("UpdateTaskType")]
         public async Task<ActionResult> UpdateTaskType(int id, string name)
         {
+            _logger.LogInfo(string.Format("UpdateTaskType/{0}/{1}:", id, name));
+            
             if (id <= 0) return BadRequest(new { success = false, message = "Invalid id" });
             if (string.IsNullOrEmpty(name)) return BadRequest(new { success = false, message = "name cannot be empty" });
 
@@ -72,12 +86,14 @@ namespace GI_API.Controllers
                 id = id,
                 name = name
             });
-
+            
         }
 
         [HttpDelete("DeleteTaskType")]
         public async Task<ActionResult> DeleteTaskType(int id)
         {
+            _logger.LogInfo(string.Format("DeleteTaskType/{0}:", id));
+
             if (id <= 0) return BadRequest(new { success = false, message = "Invalid id" });
 
             var (rows, deletedValue) = await TaskTypeService.DeleteTaskType(id, _configuration);
@@ -91,6 +107,7 @@ namespace GI_API.Controllers
                 id = id,
                 deletedValue
             });
+
         }
 
     }
