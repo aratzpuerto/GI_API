@@ -1,4 +1,5 @@
-﻿using GI_API.Models;
+﻿using GI_API.Database;
+using GI_API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -9,154 +10,50 @@ namespace GI_API.Services
 {
     public class TaskTypeService
     {
-        static string _connectionName = "GI_Connection";
+        private readonly GIDbContext _context;
+        public TaskTypeService(GIDbContext context) { _context = context; }
 
-
-        public static List<TaskType> GetAll(IConfiguration configuration)
-        {         
-            List<TaskType> taskTypes = new List<TaskType>();
-
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
-            {
-                SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM TaskTypes", con);
-                DataTable dt = new DataTable();
-                da.Fill(dt);
-
-                if (dt.Rows.Count > 0)
-                {
-                    for (int i = 0; i < dt.Rows.Count; i++)
-                    {
-                        TaskType taskType = new TaskType();
-                        DataRow row = dt.Rows[i];
-
-                        taskType.id = Convert.ToInt32(row["id"]);
-                        taskType.name = Convert.ToString(row["name"]);
-                        taskTypes.Add(taskType);
-                    }
-                }
-            }
-
-            return taskTypes;
-
-        }
-
-
-        public static TaskType GetById(int id, IConfiguration configuration)
+        public List<TaskType> GetAll()
         {
-
-            TaskType taskType = new TaskType();
-
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
-            {
-                SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM TaskTypes WHERE id = @taskTypeID", con);
-                da.SelectCommand.Parameters.AddWithValue("@taskTypeID", id);
-                DataTable dt = new DataTable();
-                da.Fill(dt);
-
-                if (dt.Rows.Count > 0)
-                {
-                    DataRow row = dt.Rows[0];
-
-                    taskType.id = Convert.ToInt32(row["id"]);
-                    taskType.name = Convert.ToString(row["name"]);
-
-                }
-
-            }
-
-            return taskType;
-
+            return _context.TaskTypes.ToList();
         }
-
-        public static async Task<int> SetTaskType(string name, IConfiguration configuration)
+          public TaskType? GetById(int id)
         {
-            int newId;
-
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
-            {
-                SqlDataAdapter da = new SqlDataAdapter();
-                da.InsertCommand = new SqlCommand("INSERT INTO TaskTypes (name) OUTPUT INSERTED.Id VALUES (@taskTypeName)", con);
-                da.InsertCommand.Parameters.AddWithValue("@taskTypeName", name);
-
-                await con.OpenAsync();
-                object result = (int)await da.InsertCommand.ExecuteScalarAsync();
-
-                // Extra safety check
-                if (result == null || result == DBNull.Value)
-                    throw new Exception("Insert failed: no Id returned from database.");
-
-                newId = Convert.ToInt32(result);
-            }
-
-            return newId;
-
+            return _context.TaskTypes.Find(id);
         }
 
-        public static async Task<(int RowsAffected, string OldValue)> UpdateTaskType(int id, string name, IConfiguration configuration)
+        public async Task<int> SetTaskType(string name)
         {
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
-            {
-                await con.OpenAsync();
-
-                using (SqlCommand updateCmd = new SqlCommand("UPDATE TaskTypes SET name = @taskTypeName OUTPUT DELETED.name as OldValue WHERE Id = @id", con))
-                {
-                    updateCmd.Parameters.AddWithValue("@taskTypeName", name);
-                    updateCmd.Parameters.AddWithValue("@id", id);
-
-                    using (SqlDataReader reader = await updateCmd.ExecuteReaderAsync())
-                    {
-                        if (await reader.ReadAsync())
-                        {
-                            string oldValue = reader["OldValue"].ToString();
-                            return (1, oldValue);
-                        }
-                    }
-
-                }
-            }
-
-            return (0, null); // not found
-
+            var taskType = new TaskType { Name = name };
+            _context.TaskTypes.Add(taskType);
+            await _context.SaveChangesAsync();
+            return taskType.Id;
         }
 
-        public static async Task<(int RowsAffected, string DeletedValue)> DeleteTaskType(int id, IConfiguration configuration)
+        public async Task<(int RowsAffected, string OldValue)> UpdateTaskType(int id, string name)
         {
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
-            {
-                await con.OpenAsync();
+            var entity = await _context.TaskTypes.FindAsync(id);
+            if (entity == null)
+                return (0, null);
 
-                using (SqlCommand deleteCmd = new SqlCommand("DELETE FROM TaskTypes OUTPUT DELETED.name AS DeletedValue WHERE Id = @id", con))
-                {
-                    deleteCmd.Parameters.AddWithValue("@id", id);
+            var oldValue = entity.Name;
+            entity.Name = name;
+            await _context.SaveChangesAsync();
 
-                    using (SqlDataReader reader = await deleteCmd.ExecuteReaderAsync())
-                    {
-                        if (await reader.ReadAsync())
-                        {
-                            string deletedValue = reader["DeletedValue"].ToString();
-                            return (1, deletedValue);
-                        }
-                    }
-                }
-            }
-
-            return (0, null); // not found
+            return (1, oldValue);
         }
 
+        public async Task<(int RowsAffected, string DeletedValue)> DeleteTaskType(int id)
+        {
+            var entity = await _context.TaskTypes.FindAsync(id);
+            if (entity == null)
+                return (0, null);
+
+            var deletedValue = entity.Name;
+            _context.TaskTypes.Remove(entity);
+            await _context.SaveChangesAsync();
+
+            return (1, deletedValue);
+        }
     }
-
-
-    //public TaskType? Get(int id) => TaskTypes.FirstOrDefault(p => p.id == id);
-
-}
-    
-
-    //public class TaskTypeContext : DbContext
-    //{
-    //    public TaskTypeContext(DbContextOptions options) : base(options) { }
-
-    //    public DbSet<TaskType> TaskTypes { get; set; }
-
-
-    //}
-
+    }
