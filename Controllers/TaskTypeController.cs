@@ -15,100 +15,69 @@ namespace GI_API.Controllers
     public class TaskTypeController : ControllerBase
     {
         private readonly ILoggerService _logger;
-        public readonly IConfiguration _configuration;
-
-        public TaskTypeController(IConfiguration configuration, ILoggerService logger) 
-        { 
-            _configuration = configuration; 
+        private readonly TaskTypeService _service;
+                
+        public TaskTypeController(TaskTypeService service, ILoggerService logger) 
+        {
+            _service = service;
             _logger = logger;
         }
 
         [HttpGet("GetTaskTypes")]
         public ActionResult<List<TaskType>> GetTaskTypes()
         {
-            List<TaskType> taskTypes = new List<TaskType>();
-            taskTypes = TaskTypeService.GetAll(_configuration);
-            return taskTypes;
-
+            return _service.GetAll();
         }
 
         [HttpGet("GetTaskTypeById")]
         public ActionResult<TaskType> GetTaskTypeById(int id)
         {
-            ActionResult result;
-            _logger.LogInfo(string.Format("GetTaskTypeById/{0}:", id));
+            if (id == 0)
+                return BadRequest(new { success = false, message = "id cannot be 0" });
 
-            if (id == 0) { 
-                result = BadRequest(new { success = false, message = "id cannot be 0" });
-                _logger.LogInfo(JsonConvert.SerializeObject(result).ToString());
-                return result;
-            }
+            var taskType = _service.GetById(id);
+            if (taskType == null)
+                return NotFound(new { success = false, message = $"Task type with id {id} not found." });
 
-            TaskType taskType = TaskTypeService.GetById(id, _configuration);
             return taskType;
         }
 
         [HttpPost("SetTaskType")]
         public async Task<ActionResult> SetTaskType(string name)
         {
-            _logger.LogInfo(string.Format("SetTaskType/{0}:", name));
+            if (string.IsNullOrEmpty(name))
+                return BadRequest(new { success = false, message = "name cannot be empty" });
 
-            if (string.IsNullOrEmpty(name)) return BadRequest(new { success = false, message = "name cannot be empty" });
+            int newId = await _service.SetTaskType(name);
 
-            int newId = await TaskTypeService.SetTaskType(name, _configuration);
-
-            return Ok(new
-            {
-                success = true,
-                message = "Task type created successfully",
-                id = newId,
-                name = name
-            });
-
+            return Ok(new { success = true, id = newId, name });
         }
 
         [HttpPut("UpdateTaskType")]
         public async Task<ActionResult> UpdateTaskType(int id, string name)
         {
-            _logger.LogInfo(string.Format("UpdateTaskType/{0}/{1}:", id, name));
-            
             if (id <= 0) return BadRequest(new { success = false, message = "Invalid id" });
             if (string.IsNullOrEmpty(name)) return BadRequest(new { success = false, message = "name cannot be empty" });
 
-            var (rows, oldValue) = await TaskTypeService.UpdateTaskType(id, name, _configuration);
+            var (rows, oldValue) = await _service.UpdateTaskType(id, name);
 
-            if (rows == 0) return NotFound(new { success = false, message = string.Format("Task type with id {0} not found.", id) });
+            if (rows == 0)
+                return NotFound(new { success = false, message = $"Task type with id {id} not found." });
 
-            return Ok(new
-            {
-                success = true,
-                message = string.Format("Task type updated successfully from {0} to {1}", oldValue, name),
-                id = id,
-                name = name
-            });
-            
+            return Ok(new { success = true, message = $"Updated from {oldValue} to {name}", id, name });
         }
 
         [HttpDelete("DeleteTaskType")]
         public async Task<ActionResult> DeleteTaskType(int id)
         {
-            _logger.LogInfo(string.Format("DeleteTaskType/{0}:", id));
-
             if (id <= 0) return BadRequest(new { success = false, message = "Invalid id" });
 
-            var (rows, deletedValue) = await TaskTypeService.DeleteTaskType(id, _configuration);
+            var (rows, deletedValue) = await _service.DeleteTaskType(id);
 
-            if (rows == 0) return NotFound(new { success = false, message = $"Task type with id {id} not found" });
+            if (rows == 0)
+                return NotFound(new { success = false, message = $"Task type with id {id} not found" });
 
-            return Ok(new
-            {
-                success = true,
-                message = $"Task type '{deletedValue}' with id {id} deleted successfully",
-                id = id,
-                deletedValue
-            });
-
+            return Ok(new { success = true, message = $"Deleted '{deletedValue}'", id });
         }
-
     }
 }

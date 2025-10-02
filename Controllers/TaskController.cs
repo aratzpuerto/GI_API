@@ -1,4 +1,5 @@
-﻿using GI_API.Models;
+﻿using GI_API.Contracts;
+using GI_API.Models;
 using GI_API.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Dynamic;
@@ -10,38 +11,41 @@ namespace GI_API.Controllers
     [ApiController]
     public class TaskController : ControllerBase
     {
-        public readonly IConfiguration _configuration;
 
-        public TaskController(IConfiguration configuration) { _configuration = configuration; }
+        private readonly ILoggerService _logger;
+        public readonly TaskService _service;
+
+       public TaskController(TaskService service, ILoggerService logger) 
+        {
+            _logger = logger;
+            _service = service; 
+        }
 
         [HttpGet("GetTasks")]
-        public ActionResult<List<Models.Task>> GetTaskTypes()
+        public ActionResult<List<Models.Task>> GetTasks()
         {
-            List<Models.Task> taskList = new List<Models.Task>();
-            taskList = TaskService.GetAll(_configuration);
-
-            return taskList;
+            return _service.GetAll();
         }
 
 
-        [HttpGet("GetTaskById")]
-        public ActionResult<Models.Task> GetTaskTypeById(int id)
+        [HttpGet("GetTasksById")]
+        public ActionResult<Models.Task> GetTasksById(int id)
         {
-            if (id == 0) return BadRequest(new { success = false, message = "id cannot be 0" });
+           if (id == 0)
+                return BadRequest(new { success = false, message = "id cannot be 0" });
 
-            Models.Task task = TaskService.GetById(id, _configuration);
+            var task = _service.GetById(id);
             if (task == null)
-                return NotFound();
+                return NotFound(new { success = false, message = $"Task with id {id} not found." });
+
             return task;
         }
 
-        [HttpPost("SetTask")]
-        public async Task<ActionResult> SetTask(string name, string? description, int typeId, int? recurringEvery, int? showOrder, bool? show, bool? completed, DateTime? completionDate, bool? active)
+        [HttpPost("CreateTask")]
+        public async Task<ActionResult> CreateTask(string name, string? description, int typeId, int? recurringEvery, int? showOrder, bool? show, bool? completed, DateTime? completionDate, bool? active)
         {
             if (string.IsNullOrEmpty(name)) return BadRequest(new { success = false, message = "name cannot be empty" });
-
-            int newId = await TaskService.SetTask(name, description, typeId, recurringEvery, showOrder, show, completed, completionDate, active, _configuration);
-
+            int newId = await _service.SetTask(name, description, typeId, recurringEvery, showOrder, show, completed, completionDate, active);
             return Ok(new
             {
                 success = true,
@@ -56,7 +60,6 @@ namespace GI_API.Controllers
                 completed = completed,
                 completionDate = completionDate,
                 active = active
-
             });
 
         }
@@ -77,7 +80,7 @@ namespace GI_API.Controllers
                 active == null
                 ) return BadRequest(new { success = false, message = "At least one field must be provided to update" });
 
-            var rows = await TaskService.UpdateTask(id, name, description, typeId, recurringEvery, showOrder, show, completed, completionDate, active, _configuration);
+            var rows = await _service.UpdateTask(id, name, description, typeId, recurringEvery, showOrder, show, completed, completionDate, active);
 
             if (rows == 0) return NotFound(new { success = false, message = string.Format("Task type with id {0} not found.", id) });
 
@@ -103,11 +106,11 @@ namespace GI_API.Controllers
         }
 
         [HttpDelete("DeleteTask")]
-        public async Task<ActionResult> DeleteTask(int id)
+        public async Task<ActionResult> DeleteTask(int id) 
         {
             if (id <= 0) return BadRequest(new { success = false, message = "Invalid id" });
 
-            var rows = await TaskService.DeleteTask(id, _configuration);
+            var rows = await _service.DeleteTask(id);  
 
             if (rows == 0) return NotFound(new { success = false, message = $"Task with id {id} not found" });
 
