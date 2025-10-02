@@ -7,7 +7,6 @@ namespace GI_API.Services
 {
     public class LoggerService : ILoggerService
     {
-        //private static ILogger _logger = LogManager.GetCurrentClassLogger();
         private readonly ILogger<LoggerService> _logger;
 
         public LoggerService(ILogger<LoggerService> logger)
