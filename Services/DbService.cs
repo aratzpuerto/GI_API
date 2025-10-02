@@ -1,46 +1,73 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using GI_API.Database;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace GI_API.Services
 {
     public class DbService
     {
-        static string _connectionName = "GI_Connection";
+        private readonly GIDbContext _context;
 
+        public DbService(GIDbContext context) { _context = context; }
 
-        public static async Task<int> ResetSeed(string tableName, int newSeedId, IConfiguration configuration)
+        public async Task<(bool TableExists, int? CurrentId)> ResetSeed(string tableName, int newSeedId)
         {
-            string existsStr = @"
-                    SELECT COUNT(1)
-                    FROM INFORMATION_SCHEMA.TABLES
-                    WHERE TABLE_NAME = @tableName;";
+            // Check if the table exists
+            var tableExists = await _context.Database.ExecuteSqlScalarAsync<int>($@"
+                SELECT COUNT(1) 
+                FROM INFORMATION_SCHEMA.TABLES 
+                WHERE TABLE_NAME = '{tableName}';
+            ");
 
-            using (SqlConnection con = new SqlConnection(configuration.GetConnectionString(_connectionName)))
-            using (SqlCommand cmd = new SqlCommand(existsStr, con))
-            {
-                cmd.Parameters.AddWithValue("@tableName", tableName);
+            if (tableExists == 0)
+                return (false, null);
 
-                await con.OpenAsync();
+            // Reset the identity seed
+            await _context.Database.ExecuteSqlRawAsync($@"
+                DBCC CHECKIDENT ('[{tableName}]', RESEED, {newSeedId});
+            ");
 
-                int exists = Convert.ToInt32(await cmd.ExecuteScalarAsync());
-                if (exists == 0)
-                    throw new Exception($"Table '{tableName}' does not exist in the database.");
+            // Return the current identity value
+            var currentId = await _context.Database.ExecuteSqlScalarAsync<int>($@"
+                SELECT IDENT_CURRENT('{tableName}');
+            ");
 
-                // Now safe to reset the identity
-                string resetStr = $@"
-                    DBCC CHECKIDENT ('[{tableName}]', RESEED, {newSeedId});
-                    SELECT IDENT_CURRENT('[{tableName}]');";
+            return (true, currentId);
+        }
 
-                cmd.CommandText = resetStr;
-                cmd.Parameters.Clear();
+        public async Task<(bool TableExists, int? CurrentId)> GetCurrentIdentity(string tableName)
+        {
+            // Check if the table exists
+            var tableExists = await _context.Database.ExecuteSqlScalarAsync<int>($@"
+                SELECT COUNT(1) 
+                FROM INFORMATION_SCHEMA.TABLES 
+                WHERE TABLE_NAME = '{tableName}';
+            ");
 
-                object result = await cmd.ExecuteScalarAsync();
+            if (tableExists == 0)
+                return (false, null);
 
-                if (result == null || result == DBNull.Value)
-                    throw new Exception("ResetSeed failed: no identity value returned from database.");
+            // Get current identity value
+            var currentId = await _context.Database.ExecuteSqlScalarAsync<int>($@"
+                SELECT IDENT_CURRENT('{tableName}');
+            ");
 
-                return Convert.ToInt32(result);
-            }
+            return (true, currentId);
+        }
+    }
 
+    public static class DbContextExtensions
+    {
+        public static async Task<T> ExecuteSqlScalarAsync<T>(this DatabaseFacade database, string sql)
+        {
+            using var command = database.GetDbConnection().CreateCommand();
+            command.CommandText = sql;
+            if (command.Connection.State != System.Data.ConnectionState.Open)
+                await command.Connection.OpenAsync();
+
+            var result = await command.ExecuteScalarAsync();
+            return (T)Convert.ChangeType(result, typeof(T));
         }
     }
 }
