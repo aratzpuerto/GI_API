@@ -1,7 +1,6 @@
 using GI_API.Contracts;
-using GI_API.Data;
+using GI_API.Database;
 using GI_API.Middlewares;
-using GI_API.Models;
 using GI_API.Services;
 using Microsoft.EntityFrameworkCore;
 using NLog.Web;
@@ -19,8 +18,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContext<TaskTypeContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<GIDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("GI_Connection")));
 
 builder.Services.AddHttpLogging(logging =>
 {
@@ -28,8 +27,21 @@ builder.Services.AddHttpLogging(logging =>
 });
 
 builder.Services.AddSingleton<ILoggerService, LoggerService>();
+builder.Services.AddScoped<TaskService>();
+builder.Services.AddScoped<TaskTypeService>();
+builder.Services.AddScoped<DbService>();
 
 var app = builder.Build();
+
+// Run migrations and seed database
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<GIDbContext>();
+    var dbService = scope.ServiceProvider.GetRequiredService<DbService>();
+
+    // Seed only if empty
+    await DbSeeder.Seed(db, dbService);
+}
 
 // Middleware pipeline
 app.UseSwagger();
