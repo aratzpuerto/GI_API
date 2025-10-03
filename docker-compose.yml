@@ -1,0 +1,42 @@
+version: '3.4'
+
+services:
+    gi_api:
+        build:
+            context: ./GI_API
+            dockerfile: Dockerfile
+        ports:
+        - "8080:8080"
+        - "8081:8081"
+        depends_on:
+        - sqlserver
+        environment:
+        - ASPNETCORE_ENVIRONMENT=Production
+        networks:
+        - ginetwork
+        restart: on-failure
+        volumes:
+        - C:/logs/GI_API:/app/logs:rw
+    sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        environment:
+            SA_PASSWORD: "G14p1Pss2025"
+            ACCEPT_EULA: "Y"
+        ports:
+        - "1433:1433"
+        volumes:
+        - sqlvolume:/var/opt/mssql
+        networks:
+        - ginetwork
+        healthcheck:
+            test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P $SA_PASSWORD -Q 'SELECT 1' || exit 1"]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 15s
+
+networks:
+    ginetwork:
+
+volumes:
+    sqlvolume:    
