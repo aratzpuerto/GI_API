@@ -10,6 +10,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docker-compose", "docker-co
 		..\docker-compose.yml = ..\docker-compose.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GI_API.Tests", "..\GI_API.Tests\GI_API.Tests.csproj", "{2E96B437-52FA-4F77-A51F-D9D5DCB87A12}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,10 @@ Global
 		{29A1742D-2828-42F1-8B6D-EFBEBBB08FD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{29A1742D-2828-42F1-8B6D-EFBEBBB08FD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{29A1742D-2828-42F1-8B6D-EFBEBBB08FD1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E96B437-52FA-4F77-A51F-D9D5DCB87A12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E96B437-52FA-4F77-A51F-D9D5DCB87A12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E96B437-52FA-4F77-A51F-D9D5DCB87A12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E96B437-52FA-4F77-A51F-D9D5DCB87A12}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

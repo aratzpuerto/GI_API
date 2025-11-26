@@ -8,7 +8,7 @@ using System.Data.SqlClient;
 
 namespace GI_API.Services
 {
-    public class TaskTypeService
+    public class TaskTypeService: ITaskTypeService
     {
         private readonly GIDbContext _context;
         public TaskTypeService(GIDbContext context) { _context = context; }
@@ -24,6 +24,9 @@ namespace GI_API.Services
 
         public async Task<int> SetTaskType(string name)
         {
+            if (name is null)
+                throw new ArgumentNullException(nameof(name));
+
             var taskType = new TaskType { Name = name };
             _context.TaskTypes.Add(taskType);
             await _context.SaveChangesAsync();
@@ -32,6 +35,9 @@ namespace GI_API.Services
 
         public async Task<(int RowsAffected, string OldValue)> UpdateTaskType(int id, string name)
         {
+            if (name is null)
+                throw new ArgumentNullException(nameof(name));
+
             var entity = await _context.TaskTypes.FindAsync(id);
             if (entity == null)
                 return (0, null);

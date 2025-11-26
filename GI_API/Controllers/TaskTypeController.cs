@@ -15,9 +15,9 @@ namespace GI_API.Controllers
     public class TaskTypeController : ControllerBase
     {
         private readonly ILoggerService _logger;
-        private readonly TaskTypeService _service;
+        private readonly ITaskTypeService _service;
                 
-        public TaskTypeController(TaskTypeService service, ILoggerService logger) 
+        public TaskTypeController(ITaskTypeService service, ILoggerService logger) 
         {
             _service = service;
             _logger = logger;

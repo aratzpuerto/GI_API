@@ -4,26 +4,26 @@ using System;
 
 namespace GI_API.Database
 {
-    public class GIDbContext: DbContext
+    public class GIDbContext: DbContext, IGIDbContext
     {
         public GIDbContext(DbContextOptions<GIDbContext> options) : base(options) { }
 
-        public DbSet<TaskType> TaskTypes { get; set; }
-        public DbSet<Models.Task> Tasks { get; set; }
-        public DbSet<WeaponType> WeaponTypes { get; set; }
-        public DbSet<Stat> Stats { get; set; }
+        public virtual DbSet<TaskType> TaskTypes { get; set; }
+        public virtual DbSet<Models.Task> Tasks { get; set; }
+        public virtual DbSet<WeaponType> WeaponTypes { get; set; }
+        public virtual DbSet<Stat> Stats { get; set; }
         
         //public DbSet<Weapon> Weapons { get; set; }
-        public DbSet<Region> Regions { get; set; }
-        public DbSet<Element> Elements { get; set; }
+        public virtual DbSet<Region> Regions { get; set; }
+        public virtual DbSet<Element> Elements { get; set; }
         //public DbSet<Character> Characters { get; set; }
         //public DbSet<Constellation> Constellations { get; set; }
-        public DbSet<AscensionMaterialType> AscensionMaterialTypes { get; set; }
+        public virtual DbSet<AscensionMaterialType> AscensionMaterialTypes { get; set; }
 
         //public DbSet<AscensionMaterial> AscensionMaterials { get; set; }
         //public DbSet<Talent> Talents { get; set; }
-        public DbSet<Day> Days { get; set; }
-        public DbSet<DomainType> DomainTypes { get; set; }
+        public virtual DbSet<Day> Days { get; set; }
+        public virtual DbSet<DomainType> DomainTypes { get; set; }
 
         //public DbSet<Domain> Domains { get; set; }
 

@@ -13,9 +13,9 @@ namespace GI_API.Controllers
     {
 
         private readonly ILoggerService _logger;
-        public readonly TaskService _service;
+        public readonly ITaskService _service;
 
-       public TaskController(TaskService service, ILoggerService logger) 
+       public TaskController(ITaskService service, ILoggerService logger) 
         {
             _logger = logger;
             _service = service; 
