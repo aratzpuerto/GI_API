@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 
 namespace GI_API.Services
 {
-    public class TaskService
+    public class TaskService : ITaskService
     {
         private readonly GIDbContext _context;
         public TaskService(GIDbContext context) { _context = context; }

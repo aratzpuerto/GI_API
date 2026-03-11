@@ -18,6 +18,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<ITaskTypeService, TaskTypeService>();
+
 builder.Services.AddDbContext<GIDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("GI_Connection")));
 
