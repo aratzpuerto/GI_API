@@ -7,6 +7,21 @@ using NLog.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Avoid https redirection issues during local development by configuring Kestrel to only listen on HTTP
+builder.WebHost.ConfigureKestrel(options =>
+{
+    // Only use HTTP
+    options.ListenAnyIP(8080); // Expose HTTP port 8080
+    // Do NOT configure HTTPS for local testing
+});
+
+// Disable HTTPS redirection completely (even if middleware is called)
+builder.Services.Configure<Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionOptions>(options =>
+{
+    options.RedirectStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status200OK;
+    options.HttpsPort = null; // Prevent automatic redirect
+});
+
 // Clear default logging providers
 builder.Logging.ClearProviders();
 
@@ -47,11 +62,18 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Middleware pipeline
+
 app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpLogging();
-app.UseHttpsRedirection();
+
+// Only use HTTPS redirection if you have a valid certificate
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseAuthorization();
 
 // Global exception handling
