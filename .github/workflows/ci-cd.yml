@@ -1,0 +1,77 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - master
+    workflow_dispatch: 
+jobs:
+  # Job 1: Run .NET Unit Tests
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          # Adjust this version if your project uses .NET 6, 7, 9, etc.
+          dotnet-version: '8.0.x' 
+
+      - name: Restore dependencies
+        # Targets the test project directly
+        run: dotnet restore ./GI_API.Tests
+
+      - name: Build project
+        run: dotnet build ./GI_API.Tests --no-restore
+
+      - name: Run Unit Tests (xUnit + Moq)
+        # Runs the tests, preventing a rebuild, and outputs standard details
+        run: dotnet test ./GI_API.Tests --no-build --verbosity normal
+
+# Job 2: Build, Push to Docker Hub, and Create Release
+  build-and-push:
+    needs: test 
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Crucial: Allows the pipeline to create a Release in your repository
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./GI_API/Dockerfile
+          push: true
+          tags: |
+            aratzpuerto/gi-api:latest
+            aratzpuerto/gi-api:${{ github.sha }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          # Tags the release with the commit hash so it is always unique
+          tag_name: deploy-${{ github.sha }} 
+          name: Automated Deployment (${{ github.sha }})
+          body: |
+            🚀 **Automated Deployment**
+            
+            A new Docker image has been successfully built, tested, and pushed to Docker Hub.
+            
+            **Docker Image Tags Available:**
+            * `aratzpuerto/gi-api:latest`
+            * `aratzpuerto/gi-api:${{ github.sha }}`
+          # Automatically appends the PRs/commits that triggered this release
+          generate_release_notes: true
