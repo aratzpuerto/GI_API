@@ -103,6 +103,15 @@ Using **Microsoft’s logging abstraction** with **NLog as the provider** gives 
 * Structured and configurable output
 * Flexibility to change targets without modifying code
 
+### ⚠️ Note on Log Files
+
+GI_API writes logs to files inside the container. In the `docker-compose.yml`, these files are **mapped to your host system** for easy access:
+
+```yaml
+volumes:
+  - C:/logs/GI_API:/app/logs:rw
+``` 
+
 ---
 
 ## Middleware
@@ -124,14 +133,14 @@ This improves reliability and client experience.
 
 ## Running the Project (Docker)
 
-GI_API is fully containerized using Docker Compose.
+GI_API is fully containerized using Docker Compose. You have two options: build locally or use the prebuilt images.
 
 ### Requirements
 
 * Docker installed locally
-* Docker Compose
+* Docker Compose (optional if using Docker CLI only)
 
-### Start API + Database
+### Option 1: Build and Run Locally
 
 From the project root:
 
@@ -141,11 +150,43 @@ docker-compose up --build
 
 This command:
 
-* Builds the API image
+* Builds the GI_API image from the Dockerfile
 * Starts a SQL Server container
 * Links both services via Docker's network
+* Persists logs and database data according to volumes
 
-No additional configuration is required.
+### Option 2: Pull Prebuilt Images
+
+If you want to skip building, you can pull the images directly from Docker Hub:
+
+```bash
+# Pull the API image
+docker pull aratzpuerto/gi-api:latest
+
+# Pull the SQL Server image (if not already on your machine)
+docker pull mcr.microsoft.com/mssql/server:2022-latest
+```
+
+Then, you can start the containers using Docker Compose or Docker CLI.
+
+**Using Docker Compose**:
+
+Make the following change in the docker-compose.yml file:
+
+Uncomment the image line under gi_api
+Comment or remove the build block under gi_api.
+
+Then run:
+
+```bash
+docker-compose up
+```
+
+### Notes
+
+* Using prebuilt images reduces startup time and avoids rebuilding the API locally.
+* Once pulled, the images can be managed via Docker Desktop, CLI, or Docker Compose, just like local builds.
+* Logs and database persistence still use volumes, ensuring your data is retained across container restarts.
 
 ---
 

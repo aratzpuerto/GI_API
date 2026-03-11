@@ -2,6 +2,7 @@ version: '3.4'
 
 services:
     gi_api:
+        # image: aratzpuerto/gi-api:latest
         build:
             context: ./GI_API
             dockerfile: Dockerfile
