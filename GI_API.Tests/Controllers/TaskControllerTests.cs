@@ -17,14 +17,18 @@ namespace GI_API.Tests.Controllers
     public class TaskControllerTests
     {
         private readonly Mock<ITaskService> _serviceMock;
+        private readonly Mock<ITaskTypeService> _taskTypeServiceMock;
         private readonly Mock<ILoggerService> _loggerMock;
         private readonly TaskController _controller;
+        private readonly TaskTypeController _taskTypeController;
 
         public TaskControllerTests()
         {
             _serviceMock = new Mock<ITaskService>();
+            _taskTypeServiceMock = new Mock<ITaskTypeService>();
             _loggerMock = new Mock<ILoggerService>();
             _controller = new TaskController(_serviceMock.Object, _loggerMock.Object);
+            _taskTypeController = new TaskTypeController(_taskTypeServiceMock.Object, _loggerMock.Object);
         }
 
         // GetTasks
@@ -131,136 +135,133 @@ namespace GI_API.Tests.Controllers
 
         }
 
+        // TaskType
+        [Fact]
+        public async void SetTaskType_ShouldReturnInternalServerError_WhenExceptionOccurs()
+        {
+            _taskTypeServiceMock.Setup(s => s.SetTaskType("New"))
+                .ThrowsAsync(new System.Exception("Unexpected error"));
 
-        //[Fact]
-        //public async void SetTaskType_ShouldReturnInternalServerError_WhenExceptionOccurs()
-        //{
-        //    _serviceMock.Setup(s => s.SetTaskType("New"))
-        //        .ThrowsAsync(new Exception("Unexpected error"));
+            var ex = await Assert.ThrowsAsync<System.Exception>(() => _taskTypeController.SetTaskType("New"));
+            Assert.Equal("Unexpected error", ex.Message);
+        }
 
-        //    var ex = await Assert.ThrowsAsync<Exception>(() => _controller.SetTaskType("New"));
-        //    Assert.Equal("Unexpected error", ex.Message);
-        //}
+        // UpdateTaskType
 
-        //// UpdateTaskType
+        [Fact]
+        public async void UpdateTaskType_ShouldReturnOk_WhenEntityExists()
+        {
+            _taskTypeServiceMock.Setup(s => s.UpdateTaskType(1, "UpdatedName"))
+                .ReturnsAsync((1, "OldName"));
 
-        //[Fact]
-        //public async void UpdateTaskType_ShouldReturnOk_WhenEntityExists()
-        //{
-        //    _serviceMock.Setup(s => s.UpdateTaskType(1, "UpdatedName"))
-        //        .ReturnsAsync((1, "OldName"));
+            var result = await _taskTypeController.UpdateTaskType(1, "UpdatedName");
+            var okResult = Assert.IsType<OkObjectResult>(result);
 
-        //    var result = await _controller.UpdateTaskType(1, "UpdatedName");
+            var successProp = okResult.Value.GetType().GetProperty("success");
+            var messageProp = okResult.Value.GetType().GetProperty("message");
+            var idProp = okResult.Value.GetType().GetProperty("id");
+            var nameProp = okResult.Value.GetType().GetProperty("name");
 
-        //    var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.True((bool)successProp.GetValue(okResult.Value));
+            Assert.Equal("Updated from OldName to UpdatedName", (string)messageProp.GetValue(okResult.Value));
+            Assert.Equal(1, (int)idProp.GetValue(okResult.Value));
+            Assert.Equal("UpdatedName", (string)nameProp.GetValue(okResult.Value));
+        }
 
-        //    var successProp = okResult.Value.GetType().GetProperty("success");
-        //    var messageProp = okResult.Value.GetType().GetProperty("message");
-        //    var idProp = okResult.Value.GetType().GetProperty("id");
-        //    var nameProp = okResult.Value.GetType().GetProperty("name");
+        [Fact]
+        public async void UpdateTaskType_ShouldReturnBadRequest_WhenNameIsEmpty()
+        {
+            var result = await _taskTypeController.UpdateTaskType(1, string.Empty);
 
-        //    Assert.True((bool)successProp.GetValue(okResult.Value));
-        //    Assert.Equal("Updated from OldName to UpdatedName", (string)messageProp.GetValue(okResult.Value));
-        //    Assert.Equal(1, (int)idProp.GetValue(okResult.Value));
-        //    Assert.Equal("UpdatedName", (string)nameProp.GetValue(okResult.Value));
-        //}
+            var badResult = Assert.IsType<BadRequestObjectResult>(result);
+            var successProp = badResult.Value.GetType().GetProperty("success");
+            var messageProp = badResult.Value.GetType().GetProperty("message");
 
-        //[Fact]
-        //public async void UpdateTaskType_ShouldReturnBadRequest_WhenNameIsEmpty()
-        //{
-        //    var result = await _controller.UpdateTaskType(1, "");
+            Assert.False((bool)successProp.GetValue(badResult.Value));
+            Assert.Equal("name cannot be empty", (string)messageProp.GetValue(badResult.Value));
+        }
 
-        //    var badResult = Assert.IsType<BadRequestObjectResult>(result);
-        //    var successProp = badResult.Value.GetType().GetProperty("success");
-        //    var messageProp = badResult.Value.GetType().GetProperty("message");
+        [Fact]
+        public async void UpdateTaskType_ShouldReturnBadRequest_WhenIdIsInvalid()
+        {
+            var result = await _taskTypeController.UpdateTaskType(0, "Name");
+            var badResult = Assert.IsType<BadRequestObjectResult>(result);
 
-        //    Assert.False((bool)successProp.GetValue(badResult.Value));
-        //    Assert.Equal("name cannot be empty", (string)messageProp.GetValue(badResult.Value));
-        //}
+            var successProp = badResult.Value.GetType().GetProperty("success");
+            var messageProp = badResult.Value.GetType().GetProperty("message");
 
-        //[Fact]
-        //public async void UpdateTaskType_ShouldReturnBadRequest_WhenIdIsInvalid()
-        //{
-        //    var result = await _controller.UpdateTaskType(0, "Name");
-        //    var badResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.False((bool)successProp.GetValue(badResult.Value));
+            Assert.Equal("Invalid id", (string)messageProp.GetValue(badResult.Value));
+        }
 
-        //    var successProp = badResult.Value.GetType().GetProperty("success");
-        //    var messageProp = badResult.Value.GetType().GetProperty("message");
+        [Fact]
+        public async void UpdateTaskType_ShouldReturnNotFound_WhenEntityDoesNotExist()
+        {
+            _taskTypeServiceMock.Setup(s => s.UpdateTaskType(999, "New"))
+                .ReturnsAsync((0, (string)null));
 
-        //    Assert.NotNull(successProp);
-        //    Assert.NotNull(messageProp);
+            var result = await _taskTypeController.UpdateTaskType(999, "New");
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
 
-        //    Assert.False((bool)successProp.GetValue(badResult.Value));
-        //    Assert.Equal("Invalid id", (string)messageProp.GetValue(badResult.Value));
-        //}
+            var successProp = notFoundResult.Value.GetType().GetProperty("success");
+            var messageProp = notFoundResult.Value.GetType().GetProperty("message");
 
-        //[Fact]
-        //public async void UpdateTaskType_ShouldReturnNotFound_WhenEntityDoesNotExist()
-        //{
-        //    _serviceMock.Setup(s => s.UpdateTaskType(999, "New"))
-        //        .ReturnsAsync((0, null));
-
-        //    var result = await _controller.UpdateTaskType(999, "New");
-
-        //    var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-
-        //    var successProp = notFoundResult.Value.GetType().GetProperty("success");
-        //    var messageProp = notFoundResult.Value.GetType().GetProperty("message");
-
-        //    Assert.False((bool)successProp.GetValue(notFoundResult.Value));
-        //    Assert.Equal("Task type with id 999 not found.", (string)messageProp.GetValue(notFoundResult.Value));
-        //}
-
-        //// DeleteTaskType
-
-        //[Fact]
-        //public async System.Threading.Tasks.Task DeleteTaskType_ShouldReturnOk_WhenEntityExists()
-        //{
-        //    _serviceMock.Setup(s => s.DeleteTaskType(1))
-        //        .ReturnsAsync((1, "ToDelete"));
-
-        //    var result = await _controller.DeleteTaskType(1);
-
-        //    var okResult = Assert.IsType<OkObjectResult>(result);
-
-        //    var successProp = okResult.Value.GetType().GetProperty("success");
-        //    var messageProp = okResult.Value.GetType().GetProperty("message");
-        //    var idProp = okResult.Value.GetType().GetProperty("id");
-
-        //    Assert.True((bool)successProp.GetValue(okResult.Value));
-        //    Assert.Equal("Deleted 'ToDelete'", (string)messageProp.GetValue(okResult.Value));
-        //    Assert.Equal(1, (int)idProp.GetValue(okResult.Value));
-        //}
-
-        //[Fact]
-        //public async System.Threading.Tasks.Task DeleteTaskType_ShouldReturnBadRequest_WhenIdIsInvalid()
-        //{
-        //    var result = await _controller.DeleteTaskType(0);
-        //    var badResult = Assert.IsType<BadRequestObjectResult>(result);
-
-        //    var successProp = badResult.Value.GetType().GetProperty("success");
-        //    var messageProp = badResult.Value.GetType().GetProperty("message");
+            Assert.False((bool)successProp.GetValue(notFoundResult.Value));
+            Assert.Equal("Task type with id 999 not found.", (string)messageProp.GetValue(notFoundResult.Value));
+        }
 
 
-        //    Assert.False((bool)successProp.GetValue(badResult.Value));
-        //    Assert.Equal("Invalid id", (string)messageProp.GetValue(badResult.Value));
-        //}
+        // DeleteTaskType
 
-        //[Fact]
-        //public async System.Threading.Tasks.Task DeleteTaskType_ShouldReturnNotFound_WhenEntityDoesNotExist()
-        //{
-        //    _serviceMock.Setup(s => s.DeleteTaskType(999))
-        //        .ReturnsAsync((0, (string)null));
+        [Fact]
+        public async void DeleteTaskType_ShouldReturnOk_WhenEntityExists()
+        {
+            _taskTypeServiceMock.Setup(s => s.DeleteTaskType(1))
+                .ReturnsAsync((1, "ToDelete"));
 
-        //    var result = await _controller.DeleteTaskType(999);
+            var result = await _taskTypeController.DeleteTaskType(1);
+            var okResult = Assert.IsType<OkObjectResult>(result);
 
-        //    var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-        //    var successProp = notFoundResult.Value.GetType().GetProperty("success");
-        //    var messageProp = notFoundResult.Value.GetType().GetProperty("message");
+            var successProp = okResult.Value.GetType().GetProperty("success");
+            var messageProp = okResult.Value.GetType().GetProperty("message");
+            var idProp = okResult.Value.GetType().GetProperty("id");
 
-        //    Assert.False((bool)successProp.GetValue(notFoundResult.Value));
-        //    Assert.Equal("Task type with id 999 not found", (string)messageProp.GetValue(notFoundResult.Value));
-        //}
+            Assert.True((bool)successProp.GetValue(okResult.Value));
+            Assert.Equal("Deleted 'ToDelete'", (string)messageProp.GetValue(okResult.Value));
+            Assert.Equal(1, (int)idProp.GetValue(okResult.Value));
+        }
+
+        [Fact]
+        public async void DeleteTaskType_ShouldReturnBadRequest_WhenIdIsInvalid()
+        {
+            var result = await _taskTypeController.DeleteTaskType(0);
+            var badResult = Assert.IsType<BadRequestObjectResult>(result);
+
+            var successProp = badResult.Value.GetType().GetProperty("success");
+            var messageProp = badResult.Value.GetType().GetProperty("message");
+
+            Assert.False((bool)successProp.GetValue(badResult.Value));
+            Assert.Equal("Invalid id", (string)messageProp.GetValue(badResult.Value));
+        }
+
+
+        [Fact]
+        public async void DeleteTaskType_ShouldReturnNotFound_WhenEntityDoesNotExist()
+        {
+            _taskTypeServiceMock.Setup(s => s.DeleteTaskType(999))
+                .ReturnsAsync((0, (string)null));
+
+            var result = await _taskTypeController.DeleteTaskType(999);
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+
+            var successProp = notFoundResult.Value.GetType().GetProperty("success");
+            var messageProp = notFoundResult.Value.GetType().GetProperty("message");
+
+            Assert.False((bool)successProp.GetValue(notFoundResult.Value));
+            Assert.Equal("Task type with id 999 not found", (string)messageProp.GetValue(notFoundResult.Value));
+        }
+
+
 
     }
 }
