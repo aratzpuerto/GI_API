@@ -147,10 +147,10 @@ GI_API is fully containerized using Docker Compose. You have two options: build 
 Leverage the automated CI/CD pipeline by pulling the latest verified image directly from Docker Hub:
 
 ```bash
-# Pull the API image
+# [OPTIONAL] Pull the API image
 docker pull aratzpuerto/gi-api:latest
 
-# Pull the SQL Server image (if not already on your machine)
+# [OPTIONAL] Pull the SQL Server image
 docker pull mcr.microsoft.com/mssql/server:2022-latest
 ```
 
